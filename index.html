@@ -623,13 +623,19 @@
         }
       }
 
+      function closeStream(stream) {
+        stream?.getTracks?.().forEach((track) => track.stop());
+      }
+
       async function ensureMicPermission() {
         if (state.micReady || !navigator.mediaDevices?.getUserMedia) {
           state.micReady = !!state.micReady;
           return state.micReady;
         }
         try {
-          state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          closeStream(stream); // liberamos el micrófono inmediatamente (Chrome móvil solo permite un uso)
+          state.stream = null;
           state.micReady = true;
           log("Permiso de micrófono otorgado.");
         } catch (error) {
@@ -782,7 +788,7 @@
       });
 
       window.addEventListener("beforeunload", () => {
-        state.stream?.getTracks?.().forEach((track) => track.stop());
+        closeStream(state.stream);
         releaseWakeLock();
       });
 
