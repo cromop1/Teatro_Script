@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ensayo interactivo</title>
+    <style>
+      :root {
+        --bg: #020617;
+        --panel: rgba(15, 23, 42, 0.85);
+        --border: rgba(148, 163, 184, 0.35);
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #22d3ee;
+        --accent-strong: #0ea5e9;
+        --success: #22c55e;
+        --danger: #f04370;
+        --warning: #fbbf24;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: radial-gradient(circle at top, #0f172a 0%, #020617 40%, #000 100%);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 20px 16px 40px;
+      }
+
+      .app {
+        max-width: 960px;
+        margin: 0 auto;
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 28px;
+        background: linear-gradient(145deg, rgba(2, 6, 23, 0.9), rgba(2, 6, 23, 0.98));
+        box-shadow: 0 25px 60px rgba(2, 6, 23, 0.7);
+      }
+
+      @media (max-width: 720px) {
+        .app {
+          padding: 20px;
+        }
+      }
+
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 32px);
+        letter-spacing: 0.02em;
+      }
+
+      header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 12px 22px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+        color: #04101e;
+        box-shadow: 0 10px 20px rgba(34, 211, 238, 0.25);
+      }
+
+      button.secondary {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+
+      button:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .chip {
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        font-size: 13px;
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(15, 23, 42, 0.65);
+      }
+
+      .chip .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+
+      .chip .dot.active {
+        background: var(--success);
+      }
+
+      .chip.active .dot {
+        background: var(--success);
+      }
+
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px 20px;
+        background: var(--panel);
+        margin-bottom: 18px;
+      }
+
+      .panel h2,
+      .panel h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+
+      .panel p {
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .panel .linea-actual {
+        font-size: 20px;
+        margin: 8px 0 4px;
+      }
+
+      .panel small {
+        color: var(--muted);
+      }
+
+      .guion {
+        max-height: 320px;
+        overflow-y: auto;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 16px;
+        background: rgba(4, 7, 19, 0.7);
+      }
+
+      .guion ol {
+        margin: 0;
+        padding-left: 20px;
+        counter-reset: line;
+      }
+
+      .guion li {
+        margin-bottom: 8px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        transition: background 0.2s ease;
+        color: var(--muted);
+      }
+
+      .guion li.active {
+        color: var(--text);
+        background: rgba(34, 211, 238, 0.12);
+        border: 1px solid rgba(34, 211, 238, 0.35);
+      }
+
+      .guion li.done {
+        color: rgba(148, 163, 184, 0.6);
+      }
+
+      .log-panel {
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: rgba(2, 6, 23, 0.7);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .log-line {
+        margin: 0 0 6px;
+        color: var(--muted);
+      }
+
+      .log-line.success {
+        color: var(--success);
+      }
+
+      .log-line.error {
+        color: var(--danger);
+      }
+
+      .warning {
+        color: var(--warning);
+        margin-top: 10px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <div>
+          <h1>Ensayo de guion por voz</h1>
+          <p>
+            Decí cada línea y, cuando coincida lo suficiente, escucharás la siguiente por
+            audio. Una vez otorgado el permiso de micrófono no se vuelve a solicitar.
+          </p>
+        </div>
+        <div class="controls">
+          <button class="primary" id="btn-toggle">Comenzar ensayo</button>
+          <button class="secondary" id="btn-reset" disabled>Reiniciar</button>
+        </div>
+      </header>
+
+      <div class="chips">
+        <span class="chip" id="chip-mic">
+          <span class="dot"></span>
+          Micrófono sin permiso
+        </span>
+        <span class="chip" id="chip-linea">
+          <span class="dot"></span>
+          Línea 1 de 0
+        </span>
+        <span class="chip" id="chip-umbral">
+          <span class="dot"></span>
+          Umbral 35% (tolerante)
+        </span>
+        <span class="chip" id="chip-wake">
+          <span class="dot"></span>
+          Bloqueo de pantalla inactivo
+        </span>
+      </div>
+
+      <section class="panel" id="panel-estado">
+        <h2>Tu línea actual</h2>
+        <p class="linea-actual" id="linea-actual">Cargado...</p>
+        <small id="mensaje-estado">Pulsa "Comenzar ensayo" para iniciar.</small>
+      </section>
+
+      <section class="panel">
+        <h3>Guion completo</h3>
+        <div class="guion" id="listado-guion" aria-live="polite"></div>
+      </section>
+
+      <section class="panel">
+        <h3>Registro en vivo</h3>
+        <div class="log-panel" id="log"></div>
+        <div class="warning" id="warning"></div>
+      </section>
+    </main>
+
+    <script>
+            const guion = [
+        "\u00a1Yo soy el muchacho!",
+        "\u00a1ta-ta-ta!... \u00a1Te mat\u00e9!",
+        "Lleg\u00f3 tu \u00daltima hora miserable.",
+        "\u00bfT\u00fa mataste a la hija de comandante? \u00a1Muere co barde! \u00a1Zahzah-zah!",
+        "\u00bfY entonces?",
+        "\u00a1Bueno, ya est\u00e1!",
+        "\u00a1Te atrapar\u00e9, villano! \u00a1Rendir\u00e1s tus cuentas con la justicia! Tacat\u00e1n... Tacat\u00e1n. Taca t\u00e1n...",
+        "\u00a1El muchacho lo persigue!",
+        "\u00a1El muchacho lo est\u00e1 alcanzando! Lleg\u00f3 tu fin...",
+        "\u00a1Vas a morir!",
+        "El muchacho tambi\u00e9n... Tacat\u00e1n...",
+        "\u00a1El muchacho lleg\u00f3! Est\u00e1s perdido. All\u00ed hay un precipicio.",
+        "\u00a1El muchacho esquiva asombrosamente!",
+        "El muchacho va a la lucha cuerpo a cuerpo. \u00a1Ah!",
+        "\u00a1Ah! El muchacho desarma al indio Ger\u00f3nimo..., y lo domina junto al precipicio. \u00bfTe das por ven cido?",
+        "\u00bfTe das por vencido?",
+        "\u00bfPor qu\u00e9 no te diste por vencido?",
+        "\u00bfA qui\u00e9n?",
+        "\u00bfQu\u00e9?",
+        "Te agarro de la ropa y cae mos los dos.",
+        "\u00a1Dale! Yo era el capit\u00e1n.",
+        "Ten\u00edamos que atacar por retaguardia.",
+        "\u00a1El puente donde estaban los enemigos! Nosotros los ve\u00edamos desde arriba.",
+        "\u00a1A la carga! Zah-zah-zah!",
+        "\u00a1ZAHHH!",
+        "Tra-ta-ta-ta-tal",
+        "\u00a1Llegan refuerzos! \u00a1Improvisemos una trinchera!",
+        "\u00a1Una granada!... \u00a1PZzzsspuijirimnimm!... \u00a1Los enemigos huyen!",
+        "\u00a1A perseguirlos!",
+        "\u00bfQu\u00e9 hacemos?",
+        "\u00a1Nosotros \u00e9ramos aviadores!",
+        "\u00a1Grrrrr!... \u00a1Grrrrr!... \u00a1Grrrrrummmmmm!\u2026",
+        "\u00a1Grrrrr!... \u00a1Grrrrr!... \u00a1 Crrrrrummmmmmm!... \u00a1 Motor dos, tambi\u00e9n!",
+        "\u00a1Bombardero CX27 ganando altura!... \u00a1Bombardero CX27 persiguiendo a un batall\u00f3n de infanter\u00eda!... Grrrrrrruuuuuuu... \u00a1Estamos sobre el enemigo!. \u00a1CX 27 informando a la base!",
+        "\u00a1Pipj-tij-pj-pijiji!... \u00a1All\u00e1 va una bomba!... \u00a1Fiiiiiiiipp jjijhhhhmmmmm!...",
+        "\u00a1Fiiiiiiipjjjjjhummmm!... \u00a1Pjjjjmminm!... \u00a1Pjjjjmmmm!... Se acab\u00f3. Est\u00e1n liquidados. CX27 se aleja victorioso del campo de batalla. Misi\u00f3n cumplida, mi general. O.K. capit\u00e1n, tiene no mes de licencia en el Caribe. \u00bfViste qu\u00e9, f\u00e1cil se gana la guerra?",
+        "Lejos.",
+        "Como un kilo.",
+        "Jara qu\u00e9 quer\u00e9s una mina?",
+        "Las minas no se dejan, a veces.",
+        "\u00a1No se dejan!",
+        "\u00bfQu\u00e9?",
+        "No.",
+        "No, vos.",
+        "No puedo. Tengo que estar solo.",
+        "Estoy, cansado. No volemos m\u00e1s.",
+        "\u00bfQu\u00e9 hacemos?",
+        "\u00bfTe parece? Y bueno ... \u00a1El avi\u00f3n se paraba!... \u00a1 Nos caemos al mar!",
+        "\u00a1Yo, tambi\u00e9n!",
+        "\u00a1S\u00ed!",
+        "\u00a1S\u00ed!",
+        "\u00bfYo que s\u00e9?",
+        "Sin embargo, sopla. \u00a1Ca\u00edamos al agua!",
+        "\u00bfQu\u00e9 hacen los n\u00e1ufragos?",
+        "\u00bfY despu\u00e9s?",
+        "\u00bfSiempre se mueren? No me gusta ser n\u00e1ufrago. Prefiero ser mendigo, periodista o pintor.",
+        "\u00a1Violinista!",
+        "\u00a1Alquimista!",
+        "Yo preferir\u00eda ser ascensorista, de un edificio alto, que llegara hasta el cielo.",
+        "\u00bfQu\u00e9 hace all\u00ed?",
+        "Los muertos... \u00bfS\u00f3lo a los muertos?",
+        "\u00bfA nosotros, tambi\u00e9n..., nos va a cuidar?",
+        "\u00a1Entonces disparemos. Raj\u00e9monos de aqu\u00ed!",
+        "Y es tarde. El agua es fr\u00eda.",
+        "La sal te hace costritas en la cara... \u00a1No me gusta ser n\u00e1ufrago! \u00a1No quiero! Adem\u00e1s, se sufre.",
+        "\u00a1Yo no quiero sufrir!",
+        "\u00bfPor qu\u00e9? \u00a1\u00bfQu\u00e9 pasa aqu\u00ed?!",
+        "\u00bfLa noche?",
+        "\u00a1Claro!",
+        "Claro...",
+        "Clarooo...",
+        "El agua se lleva la balsa.",
+        "Siempre se la lleva. Cuando la alcanz\u00e1s, no ten\u00e9s ganas de usarla.",
+        "Se la dej\u00e1s al mar.",
+        "Hagamos un esfuerzo m\u00e1s.",
+        "Y un esfuerzo m\u00e1s.",
+        "Y un esfuerzo m\u00e1s. \u00a1Ya la tengo! \u00bfVes? Ahora dan ganas de dejarla. Es como si no sirviera para nada.",
+        "Nosotros sub\u00edamos... \u00bfY despu\u00e9s?",
+        "\u00bfAl monstruo?",
+        "Tengo fr\u00edo.",
+        "\u00a1Nos vio! \u00a1Viene hacia aqu\u00ed!",
+        "\u00a1Qu\u00e9 olor tiene!",
+        "\u00a1Huele a podrido!",
+        "\u00a1No soporto el olor!",
+        "No lo soporto. \u00a1Una isla!... \u00a1All\u00ed hay una isla!...",
+        "\u00a1El monstruo se enfurece!",
+        " \u00bfQu\u00e9 ven\u00edamos a hacer?",
+        "Hay cosas en la isla... Hay edificios raros...",
+        "\u00a1Una base secreta! \u00a1Era una base secreta, con sabios y polic\u00edas!",
+        "Tch. Los astronautas \u00e9ramos nosotros. Los tipos trabajaban silenciosamente. Nosotros recorr\u00edamos el lugar...",
+        "Tom\u00e1bamos la \u00faltima coca-cola...",
+        "\u00a1A presentarse al examen m\u00e9dico!",
+        "\u00a1Normal! \u00a1Yo soy normal!",
+        " \u00bfRespiraci\u00f3n? \u00bfPulsaciones? \u00bfPresi\u00f3n arterial?",
+        "\u00bfC\u00f3mo defeca?",
+        "Defeca.",
+        "\u00bfLo toc\u00f3 alguna vez?",
+        "All\u00e1 arriba eso flota. Est\u00e1 bien.",
+        "La humanidad espera un gran servicio de usted. Primero desocupe el intestino. \u00a1Marche! Comienza el contador...",
+        "Seis... Cinco ...",
+        "\u00bfPrefer\u00edas ser n\u00e1ufrago?",
+        "O ascensorista. \u00a1Cero!",
+        "Mucho tiempo.",
+        "\u00a1Horas, d\u00edas, a\u00f1os!",
+        "Muchos. Arriba no se notan. Nosotros vamos a volver como ahora y aqu\u00ed todos estar\u00e1n viejos. Los chicos estar\u00e1n viejos . El mundo estar\u00e1 viejo,",
+        "Siempre j\u00f3venes. Cuando estemos de vuelta, reci\u00e9n empezaremos a envejecer. Y no habr\u00e1 nada en la tierra que se parezca a nosotros, nada, como nosotros, nada para nosotros...",
+        "En el cielo, en la noche.",
+        "Es aquello.",
+        "Es grande. No se dan cuenta.",
+        "Hace fr\u00edo. O calor. O m\u00e1s o menos.",
+        "\u00a1Nos va a estallar la cara, llena de sangre!",
+        "\u00bfY qu\u00e9 hacemos?",
+        "\u00bfY qu\u00e9 hacemos?",
+        "\u00a1No hacemos nada!",
+        "No.",
+        "No...",
+        "\u00a1La m\u00e1quina estallaba!... \u00a1Hab\u00eda un error de c\u00e1l culo!... Era cuatro por nueve. . .",
+        "O veintisiete por treinta sobre catorce. Estaba en el cuadrante. El total elevado a la quinta potencia. Dividido por p\u00ed.",
+        "\u00a1Mentira, no estall\u00f3! \u00a1Yo estoy jugando!",
+        "\u00a1\u00a1\u00a1No quiero jugar m\u00e1s!!!",
+        "\u00a1\u00a1!Empecemos de nuevo!!!",
+        "Chammu...",
+        "No quiero ... No quiero jugar m\u00e1s...",
+        "Chauuuu. . .",
+      ];
+
+      const UMBRAL = 0.35;
+
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+      const btnToggle = document.getElementById("btn-toggle");
+      const btnReset = document.getElementById("btn-reset");
+      const chipMic = document.getElementById("chip-mic");
+      const chipLinea = document.getElementById("chip-linea");
+      const chipUmbral = document.getElementById("chip-umbral");
+      const chipWake = document.getElementById("chip-wake");
+      const warning = document.getElementById("warning");
+      const logBox = document.getElementById("log");
+      const listadoGuion = document.getElementById("listado-guion");
+      const lineaActualEl = document.getElementById("linea-actual");
+      const mensajeEstado = document.getElementById("mensaje-estado");
+
+      const state = {
+        index: 0,
+        listening: false,
+        micReady: false,
+        stream: null
+      };
+
+      let recognition = null;
+      let recognitionRunning = false;
+      let selectedVoice = null;
+      const isMobile = /android|iphone|ipad|ipod/i.test(
+        navigator.userAgent || navigator.vendor || ""
+      );
+      const wakeLockSupported = "wakeLock" in navigator;
+      let wakeLockSentinel = null;
+      let wakeLockActive = false;
+
+      function initVoices() {
+        if (!("speechSynthesis" in window)) return;
+        const pickVoice = () => {
+          const voices = window.speechSynthesis.getVoices();
+          selectedVoice =
+            voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("es")) ||
+            voices[0] ||
+            null;
+        };
+        pickVoice();
+        window.speechSynthesis.addEventListener("voiceschanged", pickVoice);
+      }
+
+      function hablar(texto) {
+        if (!("speechSynthesis" in window)) return;
+        const utterance = new SpeechSynthesisUtterance(texto);
+        utterance.lang = selectedVoice?.lang || "es-AR";
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+        log(`TTS -> ${texto}`);
+      }
+
+      function log(message, type = "info") {
+        const line = document.createElement("div");
+        line.className = `log-line ${type}`;
+        const time = new Date().toLocaleTimeString("es-AR", { hour12: false });
+        line.textContent = `[${time}] ${message}`;
+        logBox.appendChild(line);
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+
+      function normalize(text) {
+        return text
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[¡!¿?.,:;…—\-]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function levenshtein(a, b) {
+        const rows = a.length + 1;
+        const cols = b.length + 1;
+        const dist = Array.from({ length: rows }, () => new Array(cols).fill(0));
+
+        for (let i = 0; i < rows; i++) dist[i][0] = i;
+        for (let j = 0; j < cols; j++) dist[0][j] = j;
+
+        for (let i = 1; i < rows; i++) {
+          for (let j = 1; j < cols; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            dist[i][j] = Math.min(
+              dist[i - 1][j] + 1,
+              dist[i][j - 1] + 1,
+              dist[i - 1][j - 1] + cost
+            );
+          }
+        }
+        return dist[a.length][b.length];
+      }
+
+      function similitudFlexible(ref, dicho) {
+        const normRef = normalize(ref);
+        const normDicho = normalize(dicho);
+        if (!normRef || !normDicho) return 0;
+        if (normDicho.includes(normRef) || normRef.includes(normDicho)) {
+          return 1;
+        }
+        const refWords = normRef.split(" ");
+        const dichoWords = normDicho.split(" ");
+        const dichoSet = new Set(dichoWords);
+        const coincidencias = refWords.filter((w) => dichoSet.has(w)).length;
+        const cobertura = coincidencias / Math.max(refWords.length, 1);
+        const inversa = coincidencias / Math.max(dichoWords.length, 1);
+        const distancia =
+          1 -
+          levenshtein(normRef, normDicho) / Math.max(normRef.length, normDicho.length, 1);
+        return Math.max(cobertura, inversa, distancia);
+      }
+
+      function contieneTrapstar(text) {
+        return normalize(text).includes("trapstar");
+      }
+
+      function renderGuion() {
+        const ol = document.createElement("ol");
+        guion.forEach((linea, idx) => {
+          const li = document.createElement("li");
+          li.textContent = linea;
+          if (idx === state.index) {
+            li.classList.add("active");
+          } else if (idx < state.index) {
+            li.classList.add("done");
+          }
+          ol.appendChild(li);
+        });
+        listadoGuion.innerHTML = "";
+        listadoGuion.appendChild(ol);
+      }
+
+      function updateUI() {
+        const lineaActual = guion[state.index] || "Guion completado.";
+        lineaActualEl.textContent = lineaActual;
+        chipLinea.innerHTML = `
+          <span class="dot ${state.index < guion.length ? "active" : ""}"></span>
+          Línea ${Math.min(state.index + 1, guion.length)} de ${guion.length}
+        `;
+        chipMic.innerHTML = `
+          <span class="dot ${state.micReady ? "active" : ""}"></span>
+          ${state.micReady ? "Micrófono listo" : "Micrófono sin permiso"}
+        `;
+        chipUmbral.innerHTML = `
+          <span class="dot active"></span>
+          Umbral ${(UMBRAL * 100).toFixed(0)}% (tolerante)
+        `;
+        let wakeLabel = "No requerido en escritorio";
+        let wakeActiveClass = "";
+        if (isMobile) {
+          if (!wakeLockSupported) {
+            wakeLabel = "Wake Lock no soportado";
+          } else if (wakeLockActive) {
+            wakeLabel = "Pantalla despierta (Wake Lock)";
+            wakeActiveClass = "active";
+          } else {
+            wakeLabel = "Wake Lock inactivo";
+          }
+        }
+        chipWake.innerHTML = `
+          <span class="dot ${wakeActiveClass}"></span>
+          ${wakeLabel}
+        `;
+        btnReset.disabled = state.listening;
+        btnToggle.textContent = state.listening ? "Detener ensayo" : "Comenzar ensayo";
+        renderGuion();
+      }
+
+      async function requestWakeLock() {
+        if (!isMobile || !wakeLockSupported) return;
+        try {
+          wakeLockSentinel = await navigator.wakeLock.request("screen");
+          wakeLockActive = true;
+          wakeLockSentinel.addEventListener("release", () => {
+            wakeLockActive = false;
+            updateUI();
+            log("Wake Lock liberado. Intentando renovarlo si el ensayo sigue activo.");
+            if (state.listening && document.visibilityState === "visible") {
+              requestWakeLock();
+            }
+          });
+          log("Wake Lock activo: el dispositivo no debería suspender la app.");
+        } catch (error) {
+          wakeLockActive = false;
+          log(`No se pudo activar Wake Lock: ${error.message}`, "error");
+          warning.textContent =
+            "No se pudo mantener la pantalla activa. Evitá bloquear el dispositivo manualmente.";
+        } finally {
+          updateUI();
+        }
+      }
+
+      async function releaseWakeLock() {
+        if (!wakeLockSentinel) return;
+        try {
+          await wakeLockSentinel.release();
+        } catch (error) {
+          log(`No se pudo liberar Wake Lock: ${error.message}`, "error");
+        } finally {
+          wakeLockSentinel = null;
+          wakeLockActive = false;
+          updateUI();
+        }
+      }
+
+      async function ensureMicPermission() {
+        if (state.micReady || !navigator.mediaDevices?.getUserMedia) {
+          state.micReady = !!state.micReady;
+          return state.micReady;
+        }
+        try {
+          state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          state.micReady = true;
+          log("Permiso de micrófono otorgado.");
+        } catch (error) {
+          log("Permiso de micrófono denegado.", "error");
+          warning.textContent =
+            "Necesitás habilitar el micrófono para poder ensayar. Revisá los permisos del navegador.";
+          state.micReady = false;
+        }
+        updateUI();
+        return state.micReady;
+      }
+
+      function initRecognition() {
+        if (!SpeechRecognition) {
+          warning.textContent =
+            "Tu navegador no soporta SpeechRecognition. Usá Chrome (escritorio o Android).";
+          btnToggle.disabled = true;
+          return;
+        }
+        recognition = new SpeechRecognition();
+        recognition.lang = "es-AR";
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        recognition.continuous = true;
+
+        recognition.onstart = () => {
+          recognitionRunning = true;
+          log("Escuchando...");
+          mensajeEstado.textContent = `Decí la línea ${state.index + 1}.`;
+        };
+
+        recognition.onerror = (event) => {
+          log(`Error STT: ${event.error}`, "error");
+          if (event.error === "not-allowed") {
+            warning.textContent =
+              "El navegador todavía no tiene acceso al micrófono. Revisa los permisos.";
+          }
+        };
+
+        recognition.onend = () => {
+          recognitionRunning = false;
+          if (state.listening && state.index < guion.length) {
+            setTimeout(() => safeStartRecognition(), 250);
+          }
+        };
+
+        recognition.onresult = (event) => {
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            if (!result.isFinal) continue;
+            const transcript = result[0].transcript.trim();
+            handleTranscript(transcript);
+          }
+        };
+      }
+
+      function safeStartRecognition() {
+        if (!recognition || recognitionRunning) return;
+        try {
+          recognition.start();
+        } catch (error) {
+          log(`No se pudo iniciar el reconocimiento: ${error.message}`, "error");
+        }
+      }
+
+      function stopRecognition() {
+        if (!recognition) return;
+        try {
+          recognition.stop();
+        } catch (error) {
+          log(`Error al detener reconocimiento: ${error.message}`, "error");
+        }
+      }
+
+      function handleTranscript(transcript) {
+        if (state.index >= guion.length) return;
+        const esperado = guion[state.index];
+        if (contieneTrapstar(transcript)) {
+          log("Comando 'trapstar' detectado: repito la línea actual.");
+          mensajeEstado.textContent = "Repetimos esta línea, volvé a intentarlo.";
+          hablar(esperado);
+          return;
+        }
+        const score = similitudFlexible(esperado, transcript);
+        log(`Escuché: "${transcript}" · similitud ${(score * 100).toFixed(0)}%`);
+
+        if (score >= UMBRAL) {
+          log(`Línea ${state.index + 1} aceptada.`, "success");
+          const siguiente = guion[state.index + 1];
+          state.index += 1;
+          renderGuion();
+          if (siguiente) {
+            mensajeEstado.textContent = `¡Bien! Te leemos la línea ${state.index + 1}.`;
+            hablar(siguiente);
+          } else {
+            mensajeEstado.textContent = "¡Guion completo! Podés reiniciar cuando quieras.";
+            hablar("Terminaste todas las líneas. Ensayo completo.");
+            state.listening = false;
+            stopRecognition();
+          }
+        } else {
+          mensajeEstado.textContent = "No coincidió lo suficiente, repetí la línea.";
+        }
+        updateUI();
+      }
+
+      function resetEnsayo() {
+        state.index = 0;
+        mensajeEstado.textContent = 'Pulsa "Comenzar ensayo" y decí la línea 1.';
+        log("Ensayo reiniciado.");
+        renderGuion();
+        updateUI();
+      }
+
+      btnToggle.addEventListener("click", async () => {
+        if (!recognition) {
+          warning.textContent =
+            "Reconocimiento no disponible en este navegador. Probá con Chrome.";
+          return;
+        }
+
+        if (!state.listening && state.index >= guion.length) {
+          resetEnsayo();
+        }
+
+        if (!state.listening) {
+          const permiso = await ensureMicPermission();
+          if (!permiso) return;
+          state.listening = true;
+          warning.textContent = "";
+          log("Ensayo iniciado.");
+          mensajeEstado.textContent = `Decí la línea ${state.index + 1}.`;
+          requestWakeLock();
+          safeStartRecognition();
+        } else {
+          state.listening = false;
+          log("Ensayo detenido.");
+          mensajeEstado.textContent = "Ensayo pausado.";
+          releaseWakeLock();
+          stopRecognition();
+        }
+        updateUI();
+      });
+
+      btnReset.addEventListener("click", () => {
+        if (state.listening) return;
+        stopRecognition();
+        releaseWakeLock();
+        resetEnsayo();
+      });
+
+      window.addEventListener("beforeunload", () => {
+        state.stream?.getTracks?.().forEach((track) => track.stop());
+        releaseWakeLock();
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && state.listening) {
+          requestWakeLock();
+        }
+      });
+
+      initVoices();
+      initRecognition();
+      renderGuion();
+      updateUI();
+      if (isMobile && !wakeLockSupported) {
+        warning.textContent =
+          "En este dispositivo no se puede mantener la pantalla despierta automáticamente; evitá bloquearlo durante el ensayo.";
+      }
+      log("Guion cargado. Listo para ensayar.");
+    </script>
+  </body>
+</html>
