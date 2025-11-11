@@ -443,6 +443,9 @@
       const wakeLockSupported = "wakeLock" in navigator;
       let wakeLockSentinel = null;
       let wakeLockActive = false;
+      let speaking = false;
+      let pauseBecauseSpeaking = false;
+      let pendingResumeRecognition = false;
 
       function initVoices() {
         if (!("speechSynthesis" in window)) return;
@@ -459,6 +462,14 @@
 
       function hablar(texto) {
         if (!("speechSynthesis" in window)) return;
+        if (speaking) {
+          window.speechSynthesis.cancel();
+        }
+        if (recognitionRunning) {
+          pauseBecauseSpeaking = true;
+          pendingResumeRecognition = state.listening;
+          stopRecognition();
+        }
         const utterance = new SpeechSynthesisUtterance(texto);
         utterance.lang = selectedVoice?.lang || "es-AR";
         utterance.rate = 1;
@@ -466,7 +477,21 @@
         if (selectedVoice) {
           utterance.voice = selectedVoice;
         }
-        window.speechSynthesis.cancel();
+        utterance.onend = () => {
+          speaking = false;
+          if (pauseBecauseSpeaking) {
+            pauseBecauseSpeaking = false;
+            if (pendingResumeRecognition && state.listening) {
+              safeStartRecognition();
+            }
+            pendingResumeRecognition = false;
+          }
+        };
+        utterance.onerror = (event) => {
+          speaking = false;
+          log(`Error TTS: ${event.error}`, "error");
+        };
+        speaking = true;
         window.speechSynthesis.speak(utterance);
         log(`TTS -> ${texto}`);
       }
@@ -657,7 +682,7 @@
         }
         recognition = new SpeechRecognition();
         recognition.lang = "es-AR";
-        recognition.interimResults = true;
+        recognition.interimResults = false;
         recognition.maxAlternatives = 1;
         recognition.continuous = true;
 
@@ -672,11 +697,23 @@
           if (event.error === "not-allowed") {
             warning.textContent =
               "El navegador todavía no tiene acceso al micrófono. Revisa los permisos.";
+          } else if (event.error === "network") {
+            warning.textContent =
+              "Hubo un problema de red con el reconocimiento. Verificá tu conexión e intenta nuevamente.";
+            setTimeout(() => {
+              if (state.listening && !recognitionRunning && !pauseBecauseSpeaking) {
+                safeStartRecognition();
+              }
+            }, 1500);
           }
         };
 
         recognition.onend = () => {
           recognitionRunning = false;
+          if (pauseBecauseSpeaking) {
+            log("Reconocimiento pausado mientras habla el TTS.");
+            return;
+          }
           if (state.listening && state.index < guion.length) {
             setTimeout(() => safeStartRecognition(), 250);
           }
@@ -693,7 +730,7 @@
       }
 
       function safeStartRecognition() {
-        if (!recognition || recognitionRunning) return;
+        if (!recognition || recognitionRunning || pauseBecauseSpeaking || speaking) return;
         try {
           recognition.start();
         } catch (error) {
